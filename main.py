@@ -65,7 +65,10 @@ while True:
     query = input("> ")
     if query[0] == '@':
         cmd = query[1:].split()
-        hashed_function[cmd[0]](*cmd[1:])
+        if cmd[0] in hashed_function.keys():
+            hashed_function[cmd[0]](*cmd[1:])
+        else:
+            print("This command is not supported.")
     else:
         response = sess.get(url(config['language'], query), verify=True)
         if response.status_code != 200:
