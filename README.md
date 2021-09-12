@@ -1,5 +1,5 @@
-# Google Dictionary API
- A command line implement of Google dictionary
+# Dictionary
+ A command-line implement for Free Dictionary API
 
 ## Acknowledge
 
