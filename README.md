@@ -3,20 +3,13 @@
 
 ## Acknowledge
 
-See `welcome` file.
+https://api.dictionaryapi.dev provides the data source, and https://github.com/TaylorSMarks/playsound provides the module for playing sound.
 
 ## Installation
 
-For source code: Install Python packages by running
+There are the latest release. However, if you want to build it by source code:
 
 ```
 pip install -r requirements
+pyinstaller -F main.py -p onfig.py -p playsound.py
 ```
-
-For release: Unzip and run `main` executive file.
-
-## Usage
-
-1. Input a word to inquiry its meaning.
-2. Commands: see `welcome` file.
-
