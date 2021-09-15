@@ -3,11 +3,25 @@ import json
 import config
 from playsound import playsound
 from requests import Session
+from threading import Thread
 
 os.system('')
 print(config.welcome)
 sess = Session()
 sess.trust_env = False
+
+
+class Play(Thread):
+    def __init__(self, url):
+        Thread.__init__(self)
+        self.url = url
+
+    def run(self):
+        try:
+            playsound('https:' + self.url)
+        except:
+            config.play_sound = False
+
 
 while True:
     query = input(f'({config.language_code}) > ')
@@ -33,10 +47,8 @@ while True:
             if 'text' in phonetic.keys():
                 print('\t' + phonetic['text'])
             if 'audio' in phonetic.keys() and config.play_sound:
-                try:
-                    playsound('https:' + phonetic['audio'])
-                except:
-                    config.play_sound = False
+                new_thread = Play(url=phonetic['audio'])
+                new_thread.start()
     print('\33[31mMeaning:\33[0m')
     if 'meanings' in meaning.keys():
         for meaning_ in meaning['meanings']:
