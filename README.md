@@ -11,5 +11,5 @@ There are the latest release. However, if you want to build it by source code:
 
 ```
 pip install -r requirements
-pyinstaller -F main.py -p onfig.py -p playsound.py
+pyinstaller -F main.py -p config.py -p playsound.py
 ```
