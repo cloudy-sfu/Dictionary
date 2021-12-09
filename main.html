@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- Metadata -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+
+    <title>Dictionary</title>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="nav alert mb-0">
+        <div class="nav-item navbar-brand ms-2">Dictionary</div>
+        <div class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+               aria-expanded="false">Language</a>
+            <ul class="dropdown-menu" id="list-lang">
+            </ul>
+        </div>
+        <div class="nav-item ms-auto">
+            <button class="btn btn-outline-danger disabled"><span id="current-lang"></span></button>
+        </div>
+    </div>
+
+    <div class="row alert">
+        <div class="col-md-12">
+            <form class="alert mb-0 d-flex" id="lookup">
+                <label class="flex-grow-0 d-flex flex-column justify-content-center me-2" style="width: 100%;">
+                    <input id="word" class="form-control form-control-lg" type="text"
+                           placeholder="Input your word here...">
+                </label>
+                <label class="d-flex flex-column justify-content-center ms-2">
+                    <input type="submit" class="btn btn-outline-success" value="Search">
+                </label>
+            </form>
+
+            <div class="alert alert-warning alert-dismissible fade show" id="wrapper-error-msg" hidden>
+                <strong id="error-title"></strong> <span id="error-msg"></span>
+                <button type="button" class="btn-close"
+                        onclick="document.getElementById('wrapper-error-msg').hidden = true;"></button>
+            </div>
+
+            <table class="table">
+                <tbody id="meanings">
+                <tr><td>Word</td><td class="fw-bold" id="word-title" style="color: violet"></td></tr>
+                <tr><td>Phonetics</td><td id="phonetics"></td></tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+
+<script>
+    let meaning = null;
+    let language = 'en';
+    let display_language_dict = {
+        'ar': 'Arabic',
+        'de': 'German',
+        'en': 'English',
+        'en_US': 'English (US)',
+        'en_GB': 'English (UK)',
+        'es': 'Spanish',
+        'fr': 'French',
+        'hi': 'Hindi',
+        'it': 'Italian',
+        'ja': 'Japanese',
+        'ko': 'Korean',
+        'pt-BR': 'Brazilian Portuguese',
+        'ru': 'Russian',
+        'tr': 'Turkish'
+    };
+    for (const [abbr_lang, full_lang] of Object.entries(display_language_dict)) {
+        document.getElementById('list-lang').innerHTML +=
+            '<li><button class="dropdown-item" onclick="switch_language(\''+ abbr_lang + '\')">'
+            + full_lang + '</button></li>'
+    }
+
+    function switch_language(language_) {
+        language = language_;
+        document.getElementById('current-lang').innerText = display_language_dict[language_];
+    }
+
+    $('#lookup').submit(function (e) {  // async submitting lookup action
+        e.preventDefault();
+        clear_meaning();
+        let word = document.getElementById('word').value;
+        $.ajax({
+            type: 'GET',
+            url: 'https://api.dictionaryapi.dev/api/v2/entries/' + language + '/' + word,
+            success: (response) => {parse_meaning(response[0])},
+            error: (xhr, exception) => {parse_error_msg(JSON.parse(xhr.responseText))}
+        });
+    });
+
+    function clear_meaning() {
+        document.getElementById('word-title').innerHTML = '';
+        document.getElementById('phonetics').innerHTML = '';
+        let meaning_lines = document.getElementsByClassName('one-meaning-wrapper');
+        for (let i=0; i < meaning_lines.length; i++) {
+            meaning_lines[i].innerHTML = '';
+        }
+    }
+
+    function parse_error_msg(error_msg) {
+        document.getElementById('error-title').innerText = error_msg['title'];
+        document.getElementById('error-msg').innerText = error_msg['message'] + ' ' + error_msg['resolution'];
+        document.getElementById('wrapper-error-msg').hidden = false;
+    }
+
+    function parse_meaning(meaning_) {
+        meaning = meaning_;
+        if (!('word' in meaning_)) {
+            document.getElementById('word-title').innerHTML = 'Cannot parse response data from Free Dictionary' +
+                ' API.'
+            return
+        }
+        document.getElementById('word-title').innerHTML = meaning_['word'];
+        if ('phonetics' in meaning_) {
+            for (let i = 0; i < meaning_['phonetics'].length; i++) {
+                if ('text' in meaning_['phonetics'][i]) {
+                    document.getElementById('phonetics').innerHTML +=
+                        '<p>' + meaning_['phonetics'][i]['text'] + '</p>';
+                }
+                if ('audio' in meaning_['phonetics'][i]) {
+                    document.getElementById('phonetics').innerHTML +=
+                        '<audio controls><source src="' + meaning_['phonetics'][i]['audio'] + '" /></audio>';
+                }
+            }
+        }
+        if ('meanings' in meaning_) {
+            for (let i = 0; i < meaning_['meanings'].length; i++) {
+                document.getElementById('meanings').innerHTML +=
+                    '<tr class="one-meaning-wrapper"><td class="text-nowrap">Meaning ' + (i+1).toString() +
+                    ' </td><td id="one-meaning-' + i.toString() + '"></td></tr>';
+                if ('partOfSpeech' in meaning_['meanings'][i]) {
+                    document.getElementById('one-meaning-' + i.toString()).innerHTML +=
+                        '<p style="color: goldenrod">' + meaning_['meanings'][i]['partOfSpeech'] + '</p>';
+                }
+                for (let j = 0; j < meaning_['meanings'][i]['definitions'].length; j++) {
+                    let definition = meaning_['meanings'][i]['definitions'][j]
+                    document.getElementById('one-meaning-' + i.toString()).innerHTML +=
+                        '<p>' + definition['definition'] + '</p>';
+                    if ('example' in definition) {
+                        document.getElementById('one-meaning-' + i.toString()).innerHTML +=
+                            '<p class="text-success"><i>eg.</i> ' + definition['example'] + '</p>';
+                    }
+                    if ('synonyms' in definition) {
+                        let joint_synonyms = definition['synonyms'].join(", ");
+                        document.getElementById('one-meaning-' + i.toString()).innerHTML +=
+                            '<p class="text-primary"><i>synonyms.</i>' + joint_synonyms + '</p>';
+                    }
+                }
+            }
+        }
+
+    }
+
+    switch_language('en');
+</script>
