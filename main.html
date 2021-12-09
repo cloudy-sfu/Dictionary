@@ -47,7 +47,7 @@
             </div>
 
             <table class="table">
-                <tbody id="meanings">
+                <tbody id="meanings" hidden>
                 <tr><td>Word</td><td class="fw-bold" id="word-title" style="color: violet"></td></tr>
                 <tr><td>Phonetics</td><td id="phonetics"></td></tr>
                 </tbody>
@@ -109,6 +109,7 @@
         for (let i=0; i < meaning_lines.length; i++) {
             meaning_lines[i].innerHTML = '';
         }
+        document.getElementById('meanings').hidden = true;
     }
 
     function parse_error_msg(error_msg) {
@@ -119,6 +120,7 @@
 
     function parse_meaning(meaning_) {
         meaning = meaning_;
+        document.getElementById('meanings').hidden = false;
         if (!('word' in meaning_)) {
             document.getElementById('word-title').innerHTML = 'Cannot parse response data from Free Dictionary' +
                 ' API.'
