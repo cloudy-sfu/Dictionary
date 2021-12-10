@@ -61,7 +61,6 @@
 </html>
 
 <script>
-    let meaning = null;
     let language = 'en';
     let display_language_dict = {
         'ar': 'Arabic',
@@ -79,35 +78,18 @@
         'ru': 'Russian',
         'tr': 'Turkish'
     };
-    for (const [abbr_lang, full_lang] of Object.entries(display_language_dict)) {
-        document.getElementById('list-lang').innerHTML +=
-            '<li><button class="dropdown-item" onclick="switch_language(\''+ abbr_lang + '\')">'
-            + full_lang + '</button></li>'
-    }
 
     function switch_language(language_) {
         language = language_;
         document.getElementById('current-lang').innerText = display_language_dict[language_];
     }
 
-    $('#lookup').submit(function (e) {  // async submitting lookup action
-        e.preventDefault();
-        clear_meaning();
-        let word = document.getElementById('word').value;
-        $.ajax({
-            type: 'GET',
-            url: 'https://api.dictionaryapi.dev/api/v2/entries/' + language + '/' + word,
-            success: (response) => {parse_meaning(response[0])},
-            error: (xhr, exception) => {parse_error_msg(JSON.parse(xhr.responseText))}
-        });
-    });
-
     function clear_meaning() {
         document.getElementById('word-title').innerHTML = '';
         document.getElementById('phonetics').innerHTML = '';
         let meaning_lines = document.getElementsByClassName('one-meaning-wrapper');
-        for (let i=0; i < meaning_lines.length; i++) {
-            meaning_lines[i].innerHTML = '';
+        while (meaning_lines.length > 0) {
+            meaning_lines[0].outerHTML = '';
         }
         document.getElementById('meanings').hidden = true;
     }
@@ -119,7 +101,6 @@
     }
 
     function parse_meaning(meaning_) {
-        meaning = meaning_;
         document.getElementById('meanings').hidden = false;
         if (!('word' in meaning_)) {
             document.getElementById('word-title').innerHTML = 'Cannot parse response data from Free Dictionary' +
@@ -159,13 +140,28 @@
                     if ('synonyms' in definition) {
                         let joint_synonyms = definition['synonyms'].join(", ");
                         document.getElementById('one-meaning-' + i.toString()).innerHTML +=
-                            '<p class="text-primary"><i>synonyms.</i>' + joint_synonyms + '</p>';
+                            '<p class="text-primary"><i>synonyms.</i> ' + joint_synonyms + '</p>';
                     }
                 }
             }
         }
-
     }
 
+    for (const [abbr_lang, full_lang] of Object.entries(display_language_dict)) {
+        document.getElementById('list-lang').innerHTML +=
+            '<li><button class="dropdown-item" onclick="switch_language(\''+ abbr_lang + '\')">'
+            + full_lang + '</button></li>'
+    }
+    $('#lookup').submit(function (e) {  // async submitting lookup action
+        e.preventDefault();
+        clear_meaning();
+        let word = document.getElementById('word').value;
+        $.ajax({
+            type: 'GET',
+            url: 'https://api.dictionaryapi.dev/api/v2/entries/' + language + '/' + word,
+            success: (response) => {parse_meaning(response[0])},
+            error: (xhr, exception) => {parse_error_msg(JSON.parse(xhr.responseText))}
+        });
+    });
     switch_language('en');
 </script>
